@@ -1,73 +1,87 @@
 #!/usr/bin/env ruby
 
-## (1..30).select {|n| 60 % n == 0}
-#
-# array.each_slice
-#
+require 'socket'
 
-SLEEP_TIME = 0.15
-MAX_TAB = 30
-KEY_DELAY = 1000
+# nautilus module
+module Nautilus
+  ## (1..30).select {|n| 60 % n == 0}
+  #
+  # array.each_slice
+  # save tabs
+  class SaveTabs
+    SLEEP_TIME = 0.05
+    MAX_TAB = 5
+    KEY_DELAY = 1000
 
-def key_and_paste(keys)
-  p = 'xdotool key ' + keys + ' control+l control+c'
-  #  p = "xdotool --delay" + KEY_DELAY + keys + "control+l control+c"
-  system(p)
-  sleep(SLEEP_TIME)
-  `xsel --clipboard`
-  #  return(paste())
-end
+    SHORTCUT_GETURIS = 'control+g'.freeze
+    SAVE_TABS_PATH = ENV['HOME'] + '.config/nautilus/save_tabs'
+    SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
 
-def first_tab
-  key_and_paste('alt+1')
-end
+    @uriss = ''
 
-def next_tab
-  key_and_paste('control+Page_Down')
-end
+    def key(keys)
+      p = 'xdotool key ' + keys
+      #  p = "xdotool --delay" + KEY_DELAY + keys + "control+l control+c"
+      system(p)
+      sleep(SLEEP_TIME)
+    end
 
-def prev_tab
-  key_and_paste('control+Page_Up')
-end
+    def read_socket
+      Thread.start do
+        Socket.unix_server_loop(SOCKET_PATH) do |sock, _addr|
+          begin
+            @uris = sock.read
+            break
+          rescue Errno::EPIPE => e
+            p e
+            break
+          end
+        end
+      end
+    end
 
-def current_tab
-  key_and_paste('F3 F3')
-end
+    def uris
+      thread = read_socket
+      key(SHORTCUT_GETURIS)
+      thread.join
+      p @uris
+      @uris
+    end
 
-def nth_tab(n)
-  n = [9, [0, n].max].min
-  key_and_paste("alt+#{n} F3 F3")
-end
+    def first_tab
+      key('alt+1')
+      uris
+    end
 
-def edge?
-  c = current_tab
-  next_tab
-  c != prev_tab
-end
+    def next_tab
+      key('control+Page_Down')
+      uris
+    end
 
-def min_tabs
-  uris = []
-  0.upto(9) do |i|
-    uris << nth_tab(i)
+    def prev_tab
+      key('control+Page_Up')
+      uris
+    end
+
+    def nth_tab(n)
+      n = [9, [0, n].max].min
+      key("alt+#{n}")
+      uris
+    end
+
+    def initialize
+      uris_forward = [first_tab]
+      MAX_TAB.times do
+        uris_forward << next_tab
+      end
+
+      system("zenity --list \
+                    --title='Session saved' \
+                    --width=800 --height=600 \
+                    --column='Name' --column='Value' \
+                    'uris' #{uris_forward}")
+    end
   end
-  print(uris)
-  uris.uniq.size
 end
 
-def onetab?
-  min_tabs == 1
-end
-
-uris = [first_tab]
-unless onetab?
-  MAX_TAB.times do
-    uris << next_tab
-    break if edge?
-  end
-end
-
-system("zenity --list \
-              --title='Session saved' \
-              --width=800 --height=600 \
-              --column='Name' --column='Value' \
-              'uris' #{uris}")
+Nautilus::SaveTabs.new
