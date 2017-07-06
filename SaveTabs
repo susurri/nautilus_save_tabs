@@ -30,7 +30,7 @@ module Nautilus
       Thread.start do
         Socket.unix_server_loop(SOCKET_PATH) do |sock, _addr|
           begin
-            @uris = sock.read
+            @uris = Marshal.load(sock.read)
             break
           rescue Errno::EPIPE => e
             p e
