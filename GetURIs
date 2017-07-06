@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'socket'
+require 'json'
 
 SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
 
@@ -8,7 +9,7 @@ uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
 selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
 
 UNIXSocket.open(SOCKET_PATH) do |sock|
-  sock.write(Marshal.dump([uri, selected_uris]))
+  sock.write(JSON.dump([uri, selected_uris]))
 end
 
 # system("zenity --list \

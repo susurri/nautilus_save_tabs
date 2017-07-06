@@ -1,23 +1,19 @@
 #!/usr/bin/env ruby
 
 require 'socket'
+require 'json'
 
 # nautilus module
 module Nautilus
-  ## (1..30).select {|n| 60 % n == 0}
-  #
-  # array.each_slice
   # save tabs
   class SaveTabs
-    SLEEP_TIME = 0.05
-    MAX_TAB = 5
+    SLEEP_TIME = 0.01
+    MAX_TAB = 30
     KEY_DELAY = 1000
 
     SHORTCUT_GETURIS = 'control+g'.freeze
     SAVE_TABS_PATH = ENV['HOME'] + '.config/nautilus/save_tabs'
     SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
-
-    @uriss = ''
 
     def key(keys)
       p = 'xdotool key ' + keys
@@ -29,59 +25,97 @@ module Nautilus
     def read_socket
       Thread.start do
         Socket.unix_server_loop(SOCKET_PATH) do |sock, _addr|
-          begin
-            @uris = Marshal.load(sock.read)
-            break
-          rescue Errno::EPIPE => e
-            p e
-            break
-          end
+          @uris = JSON.parse(sock.read)
+          break
         end
       end
     end
 
-    def uris
+    def read_tab
       thread = read_socket
       key(SHORTCUT_GETURIS)
       thread.join
-      p @uris
       @uris
     end
 
     def first_tab
-      key('alt+1')
-      uris
+      nth_tab(1)
     end
 
     def next_tab
       key('control+Page_Down')
-      uris
+      read_tab
     end
 
     def prev_tab
       key('control+Page_Up')
-      uris
+      read_tab
     end
 
     def nth_tab(n)
       n = [9, [0, n].max].min
       key("alt+#{n}")
+      read_tab
+    end
+
+    def last_tab
+      first_tab
+      prev_tab
+    end
+
+    def uris_forward
+      uris = [first_tab]
+      MAX_TAB.times do
+        uris << next_tab
+      end
       uris
     end
 
-    def initialize
-      uris_forward = [first_tab]
+    def uris_backward
+      uris = [last_tab]
       MAX_TAB.times do
-        uris_forward << next_tab
+        uris << prev_tab
       end
+      uris
+    end
 
+    # Array -> Array -> Array
+    def longest_match(x, y)
+      matched_length = 0
+      1.upto(y.size) do |i|
+        y.size.downto(1) do |j|
+          next unless x.first(j) == y.rotate(i).first(j)
+          matched_length = [j, matched_length].max
+          break
+        end
+      end
+      x.first(matched_length)
+    end
+
+    def divisors(n)
+      (1..n).select { |i| (n % i).zero? }
+    end
+
+    # Array -> Array -> Array
+    def minimum_recurrence(forward, backward)
+      uris = longest_match(forward, backward)
+      divisors(uris.size).each do |i|
+        u = uris.each_slice(i).uniq
+        return(u.first) if u.size == 1
+      end
+    end
+
+    def initialize
+      uris = minimum_recurrence(uris_forward, uris_backward.reverse)
       system("zenity --list \
                     --title='Session saved' \
                     --width=800 --height=600 \
                     --column='Name' --column='Value' \
-                    'uris' #{uris_forward}")
+                    'uris' #{uris}")
     end
   end
 end
 
+# sleep a second to ensure the key to invoke the script is released
+sleep(1)
 Nautilus::SaveTabs.new
