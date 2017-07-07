@@ -2,22 +2,23 @@
 
 require 'socket'
 require 'json'
+require 'yaml'
 
 # nautilus module
 module Nautilus
   # save tabs
   class SaveTabs
-    SLEEP_TIME = 0.01
+    SLEEP_TIME = 0.03
     MAX_TAB = 30
     KEY_DELAY = 1000
 
     SHORTCUT_GETURIS = 'control+g'.freeze
-    SAVE_TABS_PATH = ENV['HOME'] + '.config/nautilus/save_tabs'
+    SAVE_TABS_PATH = ENV['HOME'] + '/.config/nautilus/save_tabs'
     SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
 
     def key(keys)
       p = 'xdotool key ' + keys
-      #  p = "xdotool --delay" + KEY_DELAY + keys + "control+l control+c"
+      #  p = "xdotool --delay" + KEY_DELAY + keys
       system(p)
       sleep(SLEEP_TIME)
     end
@@ -105,6 +106,10 @@ module Nautilus
       end
     end
 
+    def save_tabs(obj)
+      File.open(SAVE_TABS_PATH, 'w') { |f| f.write obj.to_yaml }
+    end
+
     def initialize
       uris = minimum_recurrence(uris_forward, uris_backward.reverse)
       system("zenity --list \
@@ -112,6 +117,7 @@ module Nautilus
                     --width=800 --height=600 \
                     --column='Name' --column='Value' \
                     'uris' #{uris}")
+      save_tabs(uris)
     end
   end
 end
