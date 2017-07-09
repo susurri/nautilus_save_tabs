@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'uri'
+
+# nautilus module
+module Nautilus
+  # restore tabs
+  class RestoreTabs
+    load "#{ENV['HOME']}/.config/nautilus/save_tabs"
+
+    def key(keys)
+      p = 'xdotool key ' + keys
+      system(p)
+      sleep(SLEEP_TIME_RESTORE)
+    end
+
+    def type(keys)
+      p = "xdotool type '#{keys}'"
+      system(p)
+      sleep(SLEEP_TIME_RESTORE)
+    end
+
+    def load_tabs
+      YAML.load_file(SAVE_TABS_PATH)
+    end
+
+    def open_tab(uri)
+      key("control+t")
+      key("control+l")
+      type(URI.decode(uri))
+      key("Return")
+    end
+
+    def initialize
+      uris = load_tabs
+      uris.map(&:first).each { |uri| open_tab(uri) }
+    end
+  end
+end
+
+sleep(0.3)
+Nautilus::RestoreTabs.new
