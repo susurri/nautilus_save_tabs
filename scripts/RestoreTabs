@@ -25,15 +25,20 @@ module Nautilus
       YAML.load_file(SAVE_TABS_PATH)
     end
 
-    def open_tab(uri)
-      key("control+t")
+    def open_uri(uri)
       key("control+l")
       type(URI.decode(uri))
       key("Return")
     end
 
+    def open_tab(uri)
+      key("control+t")
+      open_uri(uri)
+    end
+
     def initialize
       uris = load_tabs
+      open_uri(uris.shift.first)
       uris.map(&:first).each { |uri| open_tab(uri) }
     end
   end
