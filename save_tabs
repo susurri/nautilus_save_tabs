@@ -1,0 +1,6 @@
+SLEEP_TIME_SAVE = 0.03
+MAX_TAB = 30
+SHORTCUT_GETURIS = 'control+g'.freeze
+SLEEP_TIME_RESTORE = 0.1
+SAVE_TABS_PATH = ENV['HOME'] + '/.local/share/nautilus/tabs'
+SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
