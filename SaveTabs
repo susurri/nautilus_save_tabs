@@ -8,19 +8,13 @@ require 'yaml'
 module Nautilus
   # save tabs
   class SaveTabs
-    SLEEP_TIME = 0.03
-    MAX_TAB = 30
-    KEY_DELAY = 1000
-
-    SHORTCUT_GETURIS = 'control+g'.freeze
-    SAVE_TABS_PATH = ENV['HOME'] + '/.config/nautilus/save_tabs'
-    SOCKET_PATH = '/tmp/nautilus_' + ENV['USER'] + '.socket'
+    load "#{ENV['HOME']}/.config/nautilus/save_tabs"
 
     def key(keys)
       p = 'xdotool key ' + keys
       #  p = "xdotool --delay" + KEY_DELAY + keys
       system(p)
-      sleep(SLEEP_TIME)
+      sleep(SLEEP_TIME_SAVE)
     end
 
     def read_socket
