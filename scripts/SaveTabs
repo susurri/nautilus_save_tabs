@@ -60,7 +60,7 @@ module Nautilus
 
     def uris_forward
       uris = [first_tab]
-      MAX_TAB.times do
+      @max_tab.times do
         uris << next_tab
       end
       uris
@@ -68,14 +68,14 @@ module Nautilus
 
     def uris_backward
       uris = [last_tab]
-      MAX_TAB.times do
+      @max_tab.times do
         uris << prev_tab
       end
       uris
     end
 
     # Array -> Array -> Array
-    def longest_match(x, y)
+    def longest_match_first(x, y)
       matched_length = 0
       1.upto(y.size) do |i|
         y.size.downto(1) do |j|
@@ -92,10 +92,9 @@ module Nautilus
     end
 
     # Array -> Array -> Array
-    def minimum_recurrence(forward, backward)
-      uris = longest_match(forward, backward)
-      divisors(uris.size).each do |i|
-        u = uris.each_slice(i).uniq
+    def minimum_recurrence(array)
+      divisors(array.size).each do |i|
+        u = array.each_slice(i).uniq
         return(u.first) if u.size == 1
       end
     end
@@ -104,8 +103,23 @@ module Nautilus
       File.open(SAVE_TABS_PATH, 'w') { |f| f.write obj.to_yaml }
     end
 
+    def scan_tabs
+      @max_tab = MIN_TAB
+      loop do
+        l = longest_match_first(uris_forward, uris_backward.reverse)
+        return(l) if l.size >= @max_tab / 2
+        @max_tab *= 2
+        break if @max_tab >= MAX_TAB
+      end
+      @max_tab = MAX_TAB
+      l = longest_match_first(uris_forward, uris_backward.reverse)
+      return(l) if l.size >= @max_tab / 2
+      puts 'warn'
+      uris_forward
+    end
+
     def initialize
-      uris = minimum_recurrence(uris_forward, uris_backward.reverse)
+      uris = minimum_recurrence(scan_tabs)
       system("zenity --list \
                     --title='Session saved' \
                     --width=800 --height=600 \
