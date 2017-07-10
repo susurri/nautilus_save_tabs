@@ -26,13 +26,13 @@ module Nautilus
     end
 
     def open_uri(uri)
-      key("control+l")
+      key('control+l')
       type(URI.decode(uri))
-      key("Return")
+      key('Return')
     end
 
     def open_tab(uri)
-      key("control+t")
+      key('control+t')
       open_uri(uri)
     end
 
