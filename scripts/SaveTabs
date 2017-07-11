@@ -94,7 +94,7 @@ module Nautilus
     # Array -> Array -> Array
     def minimum_recurrence(array)
       divisors(array.size).each do |i|
-        u = array.each_slice(i).uniq
+        u = array.each_slice(i).to_a.uniq
         return(u.first) if u.size == 1
       end
     end
