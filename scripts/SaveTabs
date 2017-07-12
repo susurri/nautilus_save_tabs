@@ -76,22 +76,18 @@ module Nautilus
 
     # Array -> Array -> Array
     def longest_match_first(x, y)
-      matched_length = 0
-      1.upto(y.size) do |i|
-        y.size.downto(1) do |j|
-          next unless x.first(j) == y.rotate(i).first(j)
-          matched_length = [j, matched_length].max
-          break
-        end
+      0.upto(y.size) do |i|
+        j = y.size - i
+        return(x.first(j)) if x.first(j) == y.rotate(i).first(j)
       end
-      x.first(matched_length)
+      []
     end
 
     def divisors(n)
       (1..n).select { |i| (n % i).zero? }
     end
 
-    # Array -> Array -> Array
+    # Array -> Array
     def minimum_recurrence(array)
       divisors(array.size).each do |i|
         u = array.each_slice(i).to_a.uniq
@@ -103,18 +99,19 @@ module Nautilus
       File.open(SAVE_TABS_PATH, 'w') { |f| f.write obj.to_yaml }
     end
 
+    def tabs_array(min, max)
+      0.upto(Math.log2(max / min)).to_a.map do |i|
+        min * 2**i
+      end + [max]
+    end
+
     def scan_tabs
-      @max_tab = MIN_TAB
-      loop do
+      tabs_array(MIN_TAB, MAX_TAB).each do |tab|
+        @max_tab = tab
         l = longest_match_first(uris_forward, uris_backward.reverse)
-        return(l) if l.size >= @max_tab / 2
-        @max_tab *= 2
-        break if @max_tab >= MAX_TAB
+        return(l) unless l.empty?
       end
-      @max_tab = MAX_TAB
-      l = longest_match_first(uris_forward, uris_backward.reverse)
-      return(l) if l.size >= @max_tab / 2
-      puts 'warn'
+      system('zenity --warning --text "MAX_TAB is too small"')
       uris_forward
     end
 
