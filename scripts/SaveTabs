@@ -115,7 +115,7 @@ module Nautilus
       uris_forward
     end
 
-    def initialize
+    def run
       uris = minimum_recurrence(scan_tabs)
       system("zenity --list \
                     --title='Session saved' \
@@ -124,9 +124,12 @@ module Nautilus
                     'uris' #{uris}")
       save_tabs(uris)
     end
+
+    def initialize; end
   end
 end
 
 # sleep a second to ensure the key to invoke the script is released
 sleep(1)
-Nautilus::SaveTabs.new
+save_tabs = Nautilus::SaveTabs.new
+save_tabs.run
