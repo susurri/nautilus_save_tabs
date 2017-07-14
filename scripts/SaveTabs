@@ -75,10 +75,17 @@ module Nautilus
     end
 
     # Array -> Array -> Array
-    def longest_match_first(x, y)
+    def unwrap_around(x, y)
+      if x.size != y.size
+        system('zenity --warning --text "forward and backward scan mismatch"')
+        exit 1
+      end
       0.upto(y.size) do |i|
         j = y.size - i
-        return(x.first(j)) if x.first(j) == y.rotate(i).first(j)
+        if x.first(j) == y.rotate(i).first(j) && x.first(i) == x.last(i) &&
+           y.rotate(i).last(i) == x.first(j).last(i)
+          return(x.first(j))
+        end
       end
       []
     end
@@ -108,7 +115,7 @@ module Nautilus
     def scan_tabs
       tabs_array(MIN_TAB, MAX_TAB).each do |tab|
         @max_tab = tab
-        l = longest_match_first(uris_forward, uris_backward.reverse)
+        l = unwrap_around(uris_forward, uris_backward.reverse)
         return(l) unless l.empty?
       end
       system('zenity --warning --text "MAX_TAB is too small"')
