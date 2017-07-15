@@ -3,6 +3,24 @@
 require 'socket'
 require 'json'
 require 'yaml'
+require 'English'
+
+# Integer class
+class Integer
+  def divisors
+    (1..self).select { |i| (self % i).zero? }
+  end
+end
+
+# Array class
+class Array
+  def unrecur
+    size.divisors.each do |i|
+      u = each_slice(i).to_a.uniq
+      return(u.first) if u.size == 1
+    end
+  end
+end
 
 # nautilus module
 module Nautilus
@@ -34,7 +52,8 @@ module Nautilus
     end
 
     def first_tab
-      nth_tab(1)
+      key('alt+1')
+      read_tab
     end
 
     def next_tab
@@ -44,12 +63,6 @@ module Nautilus
 
     def prev_tab
       key('control+Page_Up')
-      read_tab
-    end
-
-    def nth_tab(n)
-      n = [9, [0, n].max].min
-      key("alt+#{n}")
       read_tab
     end
 
@@ -90,18 +103,6 @@ module Nautilus
       []
     end
 
-    def divisors(n)
-      (1..n).select { |i| (n % i).zero? }
-    end
-
-    # Array -> Array
-    def minimum_recurrence(array)
-      divisors(array.size).each do |i|
-        u = array.each_slice(i).to_a.uniq
-        return(u.first) if u.size == 1
-      end
-    end
-
     def save_tabs(obj)
       File.open(SAVE_TABS_PATH, 'w') { |f| f.write obj.to_yaml }
     end
@@ -123,7 +124,7 @@ module Nautilus
     end
 
     def run
-      uris = minimum_recurrence(scan_tabs)
+      uris = scan_tabs.unrecur
       system("zenity --list \
                     --title='Session saved' \
                     --width=800 --height=600 \
@@ -136,7 +137,9 @@ module Nautilus
   end
 end
 
-# sleep a second to ensure the key to invoke the script is released
-sleep(1)
-save_tabs = Nautilus::SaveTabs.new
-save_tabs.run
+if $PROGRAM_NAME == __FILE__
+  # sleep a second to ensure the key to invoke the script is released
+  sleep(1)
+  save_tabs = Nautilus::SaveTabs.new
+  save_tabs.run
+end
