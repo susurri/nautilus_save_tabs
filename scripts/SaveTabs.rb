@@ -93,7 +93,7 @@ module Nautilus
         system('zenity --warning --text "forward and backward scan mismatch"')
         exit 1
       end
-      0.upto(y.size) do |i|
+      0.upto(y.size.div(2)) do |i|
         j = y.size - i
         if x.first(j) == y.rotate(i).first(j) && x.first(i) == x.last(i) &&
            y.rotate(i).last(i) == x.first(j).last(i)
