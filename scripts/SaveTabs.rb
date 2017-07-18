@@ -71,17 +71,17 @@ module Nautilus
       prev_tab
     end
 
-    def uris_forward
+    def scan_forward(n)
       uris = [first_tab]
-      @max_tab.times do
+      (n - 1).times do
         uris << next_tab
       end
       uris
     end
 
-    def uris_backward
+    def scan_backward(n)
       uris = [last_tab]
-      @max_tab.times do
+      (n - 1).times do
         uris << prev_tab
       end
       uris
@@ -115,8 +115,7 @@ module Nautilus
 
     def scan_tabs
       tabs_array(MIN_TAB, MAX_TAB).each do |tab|
-        @max_tab = tab
-        l = unwrap_around(uris_forward, uris_backward.reverse)
+        l = unwrap_around(scan_forward(tab), scan_backward(tab).reverse)
         return(l) unless l.empty?
       end
       system('zenity --warning --text "MAX_TAB is too small"')
