@@ -38,16 +38,15 @@ module Nautilus
     end
 
     def load
-      @config = @config.merge(YAML.load_file(
-                                "#{ENV['HOME']}/.config/nautilus/save_tabs"
-      ))
+      @config.merge!(
+        YAML.load_file("#{ENV['HOME']}/.config/nautilus/save_tabs")
+      )
     end
   end
   # save tabs
   class SaveTabs
     def key(keys)
       p = 'xdotool key ' + keys
-      #  p = "xdotool --delay" + KEY_DELAY + keys
       system(p)
       sleep(@config.config['sleep_time_save'])
     end
@@ -105,18 +104,22 @@ module Nautilus
       uris
     end
 
+    def head_tail_match?(x, i)
+      x.first(i) == x.last(i)
+    end
+
+    def rotate_match?(x, y, i)
+      j = y.size - i
+      x.first(j) == y.rotate(i).first(j) && head_tail_match?(x, i) &&
+        y.rotate(i).last(i) == x.first(j).last(i) && head_tail_match?(y, i)
+    end
+
     # Array -> Array -> Array
     def unwrap_around(x, y)
-      if x.size != y.size
-        system('zenity --warning --text "forward and backward scan mismatch"')
-        exit 1
-      end
+      y.reverse!
       0.upto(y.size.div(2)) do |i|
         j = y.size - i
-        if x.first(j) == y.rotate(i).first(j) && x.first(i) == x.last(i) &&
-           y.rotate(i).last(i) == x.first(j).last(i)
-          return(x.first(j))
-        end
+        return(x.first(j)) if rotate_match?(x, y, i)
       end
       []
     end
@@ -127,16 +130,22 @@ module Nautilus
       end
     end
 
-    def tabs_array(min, max)
-      0.upto(Math.log2(max / min)).to_a.map do |i|
-        min * 2**i
-      end + [max]
+    def numbers_of_tabs(min, max)
+      0.upto(Math.log2(max / min)).to_a.map { |i| min * 2**i } + [max]
+    end
+
+    def warn_if_mismatch(x, y)
+      command = 'zenity --warning --text "forward and backward scan mismatch"'
+      system(command) if x.size != y.size
     end
 
     def scan_tabs
-      tabs_array(@config.config['min_tab'],
-                 @config.config['max_tab']).each do |tab|
-        l = unwrap_around(scan_forward(tab), scan_backward(tab).reverse)
+      numbers_of_tabs(@config.config['min_tab'],
+                      @config.config['max_tab']).each do |n|
+        uris_forward = scan_forward(n)
+        uris_backward = scan_backward(n)
+        warn_if_mismatch(uris_forward, uris_backward)
+        l = unwrap_around(uris_forward, uris_backward)
         return(l) unless l.empty?
       end
       system('zenity --warning --text "MAX_TAB is too small"')
@@ -146,11 +155,9 @@ module Nautilus
     def run
       @config = Config.new
       uris = scan_tabs.unrecur
-      system("zenity --list \
-                    --title='Session saved' \
-                    --width=800 --height=600 \
-                    --column='Name' --column='Value' \
-                    'uris' #{uris}")
+      system("zenity --list --title='Session saved' \
+              --width=800 --height=600 --column='Name' --column='Value' \
+              'uris' #{uris}")
       save_tabs(uris)
     end
 
