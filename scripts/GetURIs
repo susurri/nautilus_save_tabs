@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'socket'
-require 'json'
+require 'yaml'
 
 load "#{ENV['HOME']}/.config/nautilus/save_tabs"
 
@@ -9,5 +9,5 @@ uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
 selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
 
 UNIXSocket.open(SOCKET_PATH) do |sock|
-  sock.write(JSON.dump([uri, selected_uris]))
+  sock.write(YAML.dump([uri, selected_uris]))
 end

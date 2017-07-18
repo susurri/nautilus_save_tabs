@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'socket'
-require 'json'
 require 'yaml'
 require 'English'
 
@@ -38,7 +37,7 @@ module Nautilus
     def read_socket
       Thread.start do
         Socket.unix_server_loop(SOCKET_PATH) do |sock, _addr|
-          @uris = JSON.parse(sock.read)
+          @uris = YAML.safe_load(sock.read)
           break
         end
       end
