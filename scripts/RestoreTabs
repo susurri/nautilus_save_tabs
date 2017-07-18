@@ -5,24 +5,39 @@ require 'uri'
 
 # nautilus module
 module Nautilus
+  # configurations
+  class Config
+    attr_reader(:config)
+    def initialize
+      @config = {
+        'sleep_time_restore' => 0.1,
+        'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
+        'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
+      }
+    end
+
+    def load
+      @config = @config.merge(YAML.load_file(
+                                "#{ENV['HOME']}/.config/nautilus/save_tabs"
+      ))
+    end
+  end
   # restore tabs
   class RestoreTabs
-    load "#{ENV['HOME']}/.config/nautilus/save_tabs"
-
     def key(keys)
       p = 'xdotool key ' + keys
       system(p)
-      sleep(SLEEP_TIME_RESTORE)
+      sleep(@config.config['sleep_time_restore'])
     end
 
     def type(keys)
       p = "xdotool type '#{keys}'"
       system(p)
-      sleep(SLEEP_TIME_RESTORE)
+      sleep(@config.config['sleep_time_restore'])
     end
 
     def load_tabs
-      YAML.load_file(SAVE_TABS_PATH)
+      YAML.load_file(@config.config['save_tabs_path'])
     end
 
     def open_uri(uri)
@@ -37,6 +52,7 @@ module Nautilus
     end
 
     def initialize
+      @config = Config.new
       uris = load_tabs
       open_uri(uris.shift.first)
       uris.map(&:first).each { |uri| open_tab(uri) }

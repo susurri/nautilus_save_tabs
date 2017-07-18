@@ -23,20 +23,39 @@ end
 
 # nautilus module
 module Nautilus
+  # configurations
+  class Config
+    attr_reader(:config)
+    def initialize
+      @config = {
+        'sleep_time_save' => 0.03,
+        'max_tab' => 128,
+        'min_tab' => 4,
+        'shortcut_geturis' => 'control+g',
+        'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
+        'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
+      }
+    end
+
+    def load
+      @config = @config.merge(YAML.load_file(
+                                "#{ENV['HOME']}/.config/nautilus/save_tabs"
+      ))
+    end
+  end
   # save tabs
   class SaveTabs
-    load "#{ENV['HOME']}/.config/nautilus/save_tabs"
-
     def key(keys)
       p = 'xdotool key ' + keys
       #  p = "xdotool --delay" + KEY_DELAY + keys
       system(p)
-      sleep(SLEEP_TIME_SAVE)
+      sleep(@config.config['sleep_time_save'])
     end
 
     def read_socket
       Thread.start do
-        Socket.unix_server_loop(SOCKET_PATH) do |sock, _addr|
+        Socket
+          .unix_server_loop(@config.config['socket_path']) do |sock, _addr|
           @uris = YAML.safe_load(sock.read)
           break
         end
@@ -45,7 +64,7 @@ module Nautilus
 
     def read_tab
       thread = read_socket
-      key(SHORTCUT_GETURIS)
+      key(@config.config['shortcut_geturis'])
       thread.join
       @uris
     end
@@ -103,7 +122,9 @@ module Nautilus
     end
 
     def save_tabs(obj)
-      File.open(SAVE_TABS_PATH, 'w') { |f| f.write obj.to_yaml }
+      File.open(@config.config['save_tabs_path'], 'w') do |f|
+        f.write obj.to_yaml
+      end
     end
 
     def tabs_array(min, max)
@@ -113,7 +134,8 @@ module Nautilus
     end
 
     def scan_tabs
-      tabs_array(MIN_TAB, MAX_TAB).each do |tab|
+      tabs_array(@config.config['min_tab'],
+                 @config.config['max_tab']).each do |tab|
         l = unwrap_around(scan_forward(tab), scan_backward(tab).reverse)
         return(l) unless l.empty?
       end
@@ -122,6 +144,7 @@ module Nautilus
     end
 
     def run
+      @config = Config.new
       uris = scan_tabs.unrecur
       system("zenity --list \
                     --title='Session saved' \

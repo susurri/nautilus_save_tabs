@@ -3,11 +3,34 @@
 require 'socket'
 require 'yaml'
 
-load "#{ENV['HOME']}/.config/nautilus/save_tabs"
+module Nautilus
+  # configurations
+  class Config
+    attr_reader(:config)
+    def initialize
+      @config = {
+        'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
+      }
+    end
 
-uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
-selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
+    def load
+      @config = @config.merge(YAML.load_file(
+                                "#{ENV['HOME']}/.config/nautilus/save_tabs"
+      ))
+    end
+  end
+  # get URIs
+  class GetURIs
+    def initialize
+      @config = Config.new
+      uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
+      selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
 
-UNIXSocket.open(SOCKET_PATH) do |sock|
-  sock.write(YAML.dump([uri, selected_uris]))
+      UNIXSocket.open(@config.config['socket_path']) do |sock|
+        sock.write(YAML.dump([uri, selected_uris]))
+      end
+    end
+  end
 end
+
+Nautilus::GetURIs.new
