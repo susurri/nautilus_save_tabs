@@ -148,14 +148,14 @@ module Nautilus
         l = unwrap_around(uris_forward, uris_backward)
         return(l) unless l.empty?
       end
-      system('zenity --warning --text "MAX_TAB is too small"')
+      system('zenity --warning --text "max_tab is too small"')
       uris_forward
     end
 
     def run
       @config = Config.new
       uris = scan_tabs.unrecur
-      system("zenity --list --title='Session saved' \
+      system("zenity --list --title='Tabs saved' \
               --width=800 --height=600 --column='Name' --column='Value' \
               'uris' #{uris}")
       save_tabs(uris)
