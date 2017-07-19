@@ -10,7 +10,7 @@ module Nautilus
     attr_reader(:config)
     def initialize
       @config = {
-        'sleep_time_restore' => 0.1,
+        'sleep_time_restore' => 0.3,
         'select_uri_delay' => 100,
         'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
         'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
@@ -47,7 +47,7 @@ module Nautilus
 
     def select_uri(uri)
       return if uri.last.empty?
-      type(File.basename(URI.decode(uri.last.split("\n").first)),
+      type(File.basename(URI.decode(URI.parse(uri.last.split("\n").first).path)),
            @config.config['select_uri_delay'])
       key('Escape')
     end
