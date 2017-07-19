@@ -119,7 +119,7 @@ module Nautilus
       y.reverse!
       0.upto(y.size.div(2)) do |i|
         j = y.size - i
-        return(x.first(j)) if rotate_match?(x, y, i)
+        return(x.first(j).unrecur) if rotate_match?(x, y, i)
       end
       []
     end
@@ -152,12 +152,25 @@ module Nautilus
       uris_forward
     end
 
+    def uris_to_s(uris)
+      str = ''
+      uris.each do |u|
+        str += u[0] + ' ' + (u[1].empty? ? '-' : u[1].chomp.tr("\n", ',')) + ' '
+      end
+      str
+    end
+
+    def show_results(uris)
+      command = "zenity --list --title='Tabs saved' --text ''\
+            --width=800 --height=600 --column='URIs' --column='Selected URIs' "
+      command += uris_to_s(uris)
+      system(command)
+    end
+
     def run
       @config = Config.new
-      uris = scan_tabs.unrecur
-      system("zenity --list --title='Tabs saved' \
-              --width=800 --height=600 --column='Name' --column='Value' \
-              'uris' #{uris}")
+      uris = scan_tabs
+      show_results(uris)
       save_tabs(uris)
     end
 
