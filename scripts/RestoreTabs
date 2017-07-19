@@ -10,7 +10,8 @@ module Nautilus
     attr_reader(:config)
     def initialize
       @config = {
-        'sleep_time_restore' => 0.1,
+        'sleep_time_restore' => 0.3,
+        'select_uri_delay' => 100,
         'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
         'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
       }
@@ -30,8 +31,12 @@ module Nautilus
       sleep(@config.config['sleep_time_restore'])
     end
 
-    def type(keys)
-      p = "xdotool type '#{keys}'"
+    def type(keys, delay = nil)
+      p = if delay
+            "xdotool type --delay=#{delay} '#{keys}'"
+          else
+            "xdotool type '#{keys}'"
+          end
       system(p)
       sleep(@config.config['sleep_time_restore'])
     end
@@ -40,10 +45,18 @@ module Nautilus
       YAML.load_file(@config.config['save_tabs_path'])
     end
 
+    def select_uri(uri)
+      return if uri.last.empty?
+      type(File.basename(URI.decode(uri.last.split("\n").first)),
+           @config.config['select_uri_delay'])
+      key('Escape')
+    end
+
     def open_uri(uri)
       key('control+l')
-      type(URI.decode(uri))
+      type(URI.decode(uri.first))
       key('Return')
+      select_uri(uri)
     end
 
     def open_tab(uri)
@@ -54,8 +67,8 @@ module Nautilus
     def initialize
       @config = Config.new
       uris = load_tabs
-      open_uri(uris.shift.first)
-      uris.map(&:first).each { |uri| open_tab(uri) }
+      open_uri(uris.shift)
+      uris.each { |uri| open_tab(uri) }
     end
   end
 end

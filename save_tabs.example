@@ -3,5 +3,6 @@ max_tab: 128
 min_tab: 4
 shortcut_geturis: "control+g"
 sleep_time_restore: 0.1
+select_uri_delay: 100
 save_tabs_path: "/home/username/.local/share/nautilus/tabs"
 socket_path: "/tmp/nautilus_username.socket"
