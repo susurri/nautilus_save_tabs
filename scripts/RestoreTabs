@@ -10,7 +10,7 @@ module Nautilus
     attr_reader(:config)
     def initialize
       @config = {
-        'sleep_time_restore' => 0.3,
+        'sleep_time_restore' => 0.1,
         'select_uri_delay' => 100,
         'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
         'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
