@@ -69,6 +69,7 @@ module Nautilus
       uris = load_tabs
       open_uri(uris.shift)
       uris.each { |uri| open_tab(uri) }
+      system('zenity --info --text "Restore tabs completed"')
     end
   end
 end
