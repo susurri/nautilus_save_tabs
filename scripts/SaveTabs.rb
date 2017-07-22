@@ -3,6 +3,8 @@
 require 'socket'
 require 'yaml'
 require 'English'
+require 'shellwords'
+require 'uri'
 
 # Integer class
 class Integer
@@ -155,8 +157,12 @@ module Nautilus
     def uris_to_s(uris)
       str = ''
       uris.each do |u|
-        str += "'#{u[0]}' '" +
-               (u[1].empty? ? '-' : u[1].chomp.tr("\n", ',')) + "' "
+        str1 = if u[1].empty?
+                 Shellwords.escape('-')
+               else
+                 Shellwords.escape(URI.decode(u[1].chomp.tr("\n", ',')))
+               end
+        str += (Shellwords.escape(u[0]) + ' ' + str1 + ' ')
       end
       str
     end
