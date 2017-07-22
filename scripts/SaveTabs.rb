@@ -155,7 +155,7 @@ module Nautilus
     def uris_to_s(uris)
       str = ''
       uris.each do |u|
-        str += "'#{u[0]}' '" + 
+        str += "'#{u[0]}' '" +
                (u[1].empty? ? '-' : u[1].chomp.tr("\n", ',')) + "' "
       end
       str
