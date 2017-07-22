@@ -113,7 +113,7 @@ module Nautilus
     def rotate_match?(x, y, i)
       j = y.size - i
       x.first(j) == y.rotate(i).first(j) && head_tail_match?(x, i) &&
-        y.rotate(i).last(i) == x.first(j).last(i) && head_tail_match?(y, i)
+        head_tail_match?(y, i)
     end
 
     # Array -> Array -> Array
