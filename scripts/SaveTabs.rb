@@ -171,8 +171,8 @@ module Nautilus
     def run
       @config = Config.new
       uris = scan_tabs
-      show_results(uris)
       save_tabs(uris)
+      show_results(uris)
     end
 
     def initialize; end
