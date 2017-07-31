@@ -4,7 +4,7 @@ require 'socket'
 require 'yaml'
 require 'English'
 require 'shellwords'
-require 'uri'
+require 'cgi'
 
 # Integer class
 class Integer
@@ -160,9 +160,9 @@ module Nautilus
         str1 = if u[1].empty?
                  Shellwords.escape('-')
                else
-                 Shellwords.escape(URI.decode(u[1].chomp.tr("\n", ',')))
+                 Shellwords.escape(CGI.unescape(u[1].chomp.tr("\n", ',')))
                end
-        str += (Shellwords.escape(u[0]) + ' ' + str1 + ' ')
+        str += (Shellwords.escape(CGI.unescape(u[0])) + ' ' + str1 + ' ')
       end
       str
     end

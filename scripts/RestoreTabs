@@ -2,6 +2,7 @@
 
 require 'yaml'
 require 'uri'
+require 'cgi'
 
 # nautilus module
 module Nautilus
@@ -47,14 +48,15 @@ module Nautilus
 
     def select_uri(uri)
       return if uri.last.empty?
-      type(File.basename(URI.decode(URI.parse(uri.last.split("\n").first).path)),
+      type(File.basename(CGI.unescape(URI.parse(uri.last.split("\n")
+                                                .first).path)),
            @config.config['select_uri_delay'])
       key('Escape')
     end
 
     def open_uri(uri)
       key('control+l')
-      type(URI.decode(uri.first))
+      type(uri.first + '/')
       key('Return')
       select_uri(uri)
     end
