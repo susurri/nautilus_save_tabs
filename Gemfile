@@ -3,5 +3,8 @@
 source 'https://rubygems.org'
 
 gem 'rake'
-gem 'rantly'
-gem 'rspec'
+
+group :development do
+  gem 'rantly'
+  gem 'rspec'
+end
