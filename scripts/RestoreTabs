@@ -3,6 +3,7 @@
 require 'yaml'
 require 'uri'
 require 'cgi'
+require 'socket'
 
 # nautilus module
 module Nautilus
@@ -14,6 +15,7 @@ module Nautilus
         'sleep_time_restore' => 0.3,
         'select_uri_delay' => 100,
         'save_tabs_path' => ENV['HOME'] + '/.local/share/nautilus/tabs',
+        'shortcut_geturis' => 'control+g',
         'socket_path' => '/tmp/nautilus_' + ENV['USER'] + '.socket'
       }
     end
@@ -46,11 +48,30 @@ module Nautilus
       YAML.load_file(@config.config['save_tabs_path'])
     end
 
+    def read_socket(filename)
+      Thread.start do
+        Socket
+          .unix_server_loop(@config.config['socket_path']) do |sock, _addr|
+          sock.puts(filename)
+          @uris = YAML.safe_load(sock.read)
+          break
+        end
+      end
+    end
+
+    def get_uris(filename)
+      thread = read_socket(filename)
+      key(@config.config['shortcut_geturis'])
+      thread.join
+      @uris
+    end
+
     def select_uri(uri)
       return if uri.last.empty?
-      type(File.basename(CGI.unescape(URI.parse(uri.last.split("\n")
-                                                .first).path)),
-           @config.config['select_uri_delay'])
+      filename = File.basename(CGI.unescape(URI.parse(uri.last.split("\n")
+                                                .first).path))
+      uri = get_uris(filename)
+      type(uri, @config.config['select_uri_delay'])
       key('Escape')
     end
 

@@ -57,6 +57,7 @@ module Nautilus
       Thread.start do
         Socket
           .unix_server_loop(@config.config['socket_path']) do |sock, _addr|
+          sock.puts('')
           @uris = YAML.safe_load(sock.read)
           break
         end
@@ -160,7 +161,8 @@ module Nautilus
         str1 = if u[1].empty?
                  Shellwords.escape('-')
                else
-                 Shellwords.escape(CGI.unescape(u[1].chomp.tr("\n", ',')))
+                 Shellwords.escape(CGI.unescape(u[1].chomp.tr("\n", ','))
+                          .encode(invalid: :replace))
                end
         str += (Shellwords.escape(CGI.unescape(u[0])) + ' ' + str1 + ' ')
       end
