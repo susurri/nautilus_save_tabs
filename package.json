@@ -1,6 +1,6 @@
 {
   "name": "nautilus_save_tabs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nautilus scripts to save/restore tabs",
   "main": "index.js",
   "dependencies": {},
