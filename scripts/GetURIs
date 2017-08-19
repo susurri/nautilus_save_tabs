@@ -2,6 +2,14 @@
 
 require 'socket'
 require 'yaml'
+require 'nkf'
+
+# string
+class String
+  def halfwidth
+    NKF.nkf('-m0Z1 -W -w', self)
+  end
+end
 
 module Nautilus
   # configurations
@@ -23,11 +31,45 @@ module Nautilus
   class GetURIs
     def initialize
       @config = Config.new
-      uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
-      selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
+      @uri = ENV['NAUTILUS_SCRIPT_CURRENT_URI']
+      @selected_uris = ENV['NAUTILUS_SCRIPT_SELECTED_URIS']
+      socket
+    end
 
+    def lower_bound(min, max, f)
+      while (max - min) > 1
+        mean = (max + min) / 2
+        if f.call(mean)
+          max = mean
+        else
+          min = mean
+        end
+      end
+      max
+    end
+
+    def minimum_matched(str, strs)
+      f = proc { |n|
+        matched = strs.select do |s|
+          s.encode(invalid: :replace).halfwidth
+           .downcase.start_with?(str.halfwidth
+                         .downcase[0, n])
+        end
+        matched.size <= 1
+      }
+      str[0, lower_bound(0, str.size, f)].halfwidth
+    end
+
+    def socket
       UNIXSocket.open(@config.config['socket_path']) do |sock|
-        sock.write(YAML.dump([uri, selected_uris]))
+        sock.set_encoding 'UTF-8'
+        filename = sock.gets.chomp
+        case filename
+        when ''
+          sock.write(YAML.dump([@uri, @selected_uris]))
+        else
+          sock.write(YAML.dump(minimum_matched(filename, Dir.entries('.'))))
+        end
       end
     end
   end

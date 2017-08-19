@@ -1,0 +1,24 @@
+{
+  "name": "nautilus_save_tabs",
+  "version": "1.0.1",
+  "description": "Nautilus scripts to save/restore tabs",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "bundle exec rake spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/susurri/nautilus_save_tabs.git"
+  },
+  "keywords": [
+    "nautilus"
+  ],
+  "author": "susurri",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/susurri/nautilus_save_tabs/issues"
+  },
+  "homepage": "https://github.com/susurri/nautilus_save_tabs#readme"
+}
